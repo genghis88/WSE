@@ -7,5 +7,6 @@
 <listEntry value="1"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="edu.nyu.cs.cs2580.SearchEngine"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="25809&#10;data/corpus.tsv"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="WebSearchEngine"/>
 </launchConfiguration>
