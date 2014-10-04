@@ -6,13 +6,18 @@ import java.util.Scanner;
 class Ranker {
   private Index _index;
 
+  public Ranker(Index index)
+  {
+	  _index = index;
+  }
+  
   public Ranker(String index_source){
     _index = new Index(index_source);
   }
 
   public Vector < ScoredDocument > runquery(String query){
     Vector < ScoredDocument > retrieval_results = new Vector < ScoredDocument > ();
-    for (int i = 0; i < _index.numDocs(); ++i){
+    for (int i = 0; i < get_index().numDocs(); ++i){
       retrieval_results.add(runquery(query, i));
     }
     return retrieval_results;
@@ -30,7 +35,7 @@ class Ranker {
 
     // Get the document vector. For hw1, you don't have to worry about the
     // details of how index works.
-    Document d = _index.getDoc(did);
+    Document d = get_index().getDoc(did);
     Vector < String > dv = d.get_title_vector();
 
     // Score the document. Here we have provided a very simple ranking model,
@@ -46,5 +51,13 @@ class Ranker {
     }
 
     return new ScoredDocument(did, d.get_title_string(), score);
+  }
+
+  public Index get_index() {
+	return _index;
+  }
+	
+  protected void set_index(Index _index) {
+	this._index = _index;
   }
 }

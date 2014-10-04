@@ -1,0 +1,25 @@
+package edu.nyu.cs.cs2580;
+
+import java.util.Iterator;
+import java.util.Vector;
+
+public class QLRanker extends Ranker {
+  
+  public QLRanker(String index_source) {
+    super(index_source);
+  }
+  
+  public Vector<ScoredDocument> runquery(String query) {
+    Iterator < ScoredDocument > itr = sds.iterator();
+    while (itr.hasNext()){
+      ScoredDocument sd = itr.next();
+      if (queryResponse.length() > 0){
+        queryResponse = queryResponse + "\n";
+      }
+      queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString();
+    }
+    if (queryResponse.length() > 0){
+      queryResponse = queryResponse + "\n";
+    }
+  }
+}

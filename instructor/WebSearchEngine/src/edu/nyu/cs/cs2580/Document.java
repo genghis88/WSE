@@ -16,11 +16,14 @@ class Document {
   private static HashMap < Integer , Integer > _df = new HashMap < Integer , Integer >();
   private static HashMap < Integer , Integer > _tf = new HashMap < Integer , Integer >();
   private static int _total_tf = 0;
-  
+  private int _doc_total_tf = 0;
+  private static int _total_views=0;
   private Vector < Integer > _body;
   private Vector < Integer > _title;
   private String _titleString;
   private int _numviews;
+  
+  private HashMap <Integer, Integer> _doc_dictionary = new HashMap<Integer, Integer>();
   
   public static int documentFrequency(String s){
     return _dictionary.containsKey(s) ? _df.get(_dictionary.get(s)) : 0;
@@ -34,6 +37,18 @@ class Document {
     return _total_tf;
   }
   
+  public int docTermFrequency(String s) {
+    return _dictionary.containsKey(s) ? _doc_dictionary.get(_dictionary.get(s)) : 0;
+  }
+  
+  public int docTermFrequency(){
+    return _doc_total_tf;
+  }
+  
+  public static int getTotalViews()
+  {
+    return _total_views;
+  }
   public Document(int did, String content){
     Scanner s = new Scanner(content).useDelimiter("\t");
 
@@ -50,14 +65,20 @@ class Document {
       unique_terms.add(idx);
       int old_tf = _tf.get(idx);
       _tf.put(idx, old_tf + 1);
+      int old_doc_tf = _doc_dictionary.get(idx);
+      _doc_dictionary.put(idx, old_doc_tf + 1);
       _total_tf++;
+      _doc_total_tf++;
     }
     for (int i = 0; i < _body.size(); ++i){
       int idx = _body.get(i);
       unique_terms.add(idx);
       int old_tf = _tf.get(idx);
       _tf.put(idx, old_tf + 1);
+      int old_doc_tf = _doc_dictionary.get(idx);
+      _doc_dictionary.put(idx, old_doc_tf + 1);
       _total_tf++;
+      _doc_total_tf++;
     }
     for (Integer idx : unique_terms){
       if (_df.containsKey(idx)){
@@ -67,6 +88,7 @@ class Document {
     }
     _numviews = Integer.parseInt(s.next());
     _docid = did;
+    _total_views += _numviews;
   }
   
   public String get_title_string(){
@@ -108,6 +130,7 @@ class Document {
         _df.put(idx,0);
       }
       tv.add(idx);
+      _doc_dictionary.put(idx, 0);
     }
     return;
   }
