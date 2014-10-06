@@ -112,20 +112,6 @@ class Evaluator {
     return gainCounts;
   }
   
-  public static double max(ArrayList<Double> arr, int i)
-  {
-      if(i < 0)
-        i = 0;
-      double max = arr.get(i);
-      i++;
-      for(; i < arr.size(); i++)
-      {
-          if(max < arr.get(i))
-             max = arr.get(i);
-      }
-      return max;
-  }
-  
   private static void printMetrics(double RR,ArrayList<Double> rr,String q,List<Integer> docIdList) {
     List<Integer> l = new LinkedList<Integer>(); 
     l.add(1);
@@ -143,18 +129,8 @@ class Evaluator {
     {
       Double x = rr.get(val-1);      
       precision.add(x/val);
-      if(RR != 0) {
-        recall.add(x/RR);
-      }
-      else {
-        recall.add(0.0);
-      }
-      if(x != 0) {
-        F.add(1.0/(alfa*val/x + (1.0-alfa)*RR/x));
-      }
-      else {
-        F.add(0.0);
-      }
+      recall.add(x/RR);
+      F.add(1.0/(alfa*val/x + (1.0-alfa)*RR/x));
     }
     
     for(double d : precision)
@@ -178,16 +154,16 @@ class Evaluator {
     //Average precision and reciprocal rank calculation
     double ap = rr.get(0);
     
-    //List<Double> recallprecision = new LinkedList<Double>();
+    List<Double> recallprecision = new LinkedList<Double>();
     
     double reciprocal_rank = 0.0;
     if(rr.get(0) != 0) {
       reciprocal_rank = 1.0;
     }
     
-    /*for(int z=0;z<11;z++) {
+    for(int z=0;z<11;z++) {
       recallprecision.add(0.0);
-    }*/
+    }
     
     double recallOnePoint = 0;
     
@@ -205,15 +181,13 @@ class Evaluator {
         }
       }
     }
-    if(RR != 0) {
-      ap = (ap/RR);
-    }
-    else {
-      ap = 0.0;
-    }
     
-    /*boolean flag = true;
-    int k = 0;
+    ap = (ap/RR);
+    
+    
+    boolean flag = true;
+    
+    /*int k = 0;
     for(double j=0;j<=recallOnePoint;j+=(0.1 * (recallOnePoint))) {
       int p = (int) Math.round(j);
       if(!flag) {
@@ -227,34 +201,8 @@ class Evaluator {
       k += 1;
     }*/
     
-    double pt = 0.1;
-    Queue<Double> a = new LinkedList<Double>();
-    for(pt = 0.1; pt <=1.0; pt+=0.1)
-    {
-        a.add(Math.ceil(pt*RR));
-    }
-    
-    int fi = 0;
-    ArrayList<Double> rpts = new ArrayList<Double>();
-    while(!a.isEmpty())
-    {
-       if(fi >= rr.size())
-         break;
-       double z = rr.get(fi);
-       if(a.peek() == z)
-       {
-         double x = a.remove();
-         rpts.add(x/(fi+1));
-       }
-       else
-       {
-         fi++;
-       }
-    }
-    
-    for(int i = 0; i <= rpts.size(); i++)
-    {
-      sb.append(max(rpts,i-1));
+    for(int j = 0; j < recallprecision.size(); j++) {
+      sb.append(recallprecision.get(j));
       sb.append('\t');
     }
     

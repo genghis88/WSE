@@ -178,16 +178,16 @@ class Evaluator {
     //Average precision and reciprocal rank calculation
     double ap = rr.get(0);
     
-    //List<Double> recallprecision = new LinkedList<Double>();
+    List<Double> recallprecision = new LinkedList<Double>();
     
     double reciprocal_rank = 0.0;
     if(rr.get(0) != 0) {
       reciprocal_rank = 1.0;
     }
     
-    /*for(int z=0;z<11;z++) {
+    for(int z=0;z<11;z++) {
       recallprecision.add(0.0);
-    }*/
+    }
     
     double recallOnePoint = 0;
     
@@ -227,6 +227,7 @@ class Evaluator {
       k += 1;
     }*/
     
+  //new code###################################################################################################
     double pt = 0.1;
     Queue<Double> a = new LinkedList<Double>();
     for(pt = 0.1; pt <=1.0; pt+=0.1)

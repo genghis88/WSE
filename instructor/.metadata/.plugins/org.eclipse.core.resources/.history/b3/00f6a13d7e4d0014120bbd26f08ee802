@@ -58,7 +58,7 @@ class QueryHandler implements HttpHandler {
     return map;  
   } 
   
-  public String getResponse(int sesId, List<ScoredDocument> sds, String format, String query)
+  public String getResponse(List<ScoredDocument> sds, String format, String query)
   {
     if(format.equals("html"))
     {
@@ -109,7 +109,6 @@ class QueryHandler implements HttpHandler {
         while (itr.hasNext()){
           ScoredDocument sd = itr.next();
           int docid = sd.get_did();
-          LogHandler.log(Integer.toString(sesId), query, Integer.toString(docid), "render");
           String title = sd.get_title();
           Double score = sd.get_score();
           Div outer_element = new Div();
@@ -195,26 +194,10 @@ class QueryHandler implements HttpHandler {
     String uriPath = exchange.getRequestURI().getPath();
     Vector < ScoredDocument > sds = null;
     String format = null;
-    Headers responseHeaders = exchange.getResponseHeaders();
     if ((uriPath != null) && (uriQuery != null)){
       if (uriPath.equals("/search")){
         Map<String,String> query_map = getQueryMap(uriQuery);
         Set<String> keys = query_map.keySet();
-        
-        //for logging
-        int sesId = -1;
-        if(requestHeaders.get("Cookie") != null) {
-          String cookie = requestHeaders.get("Cookie").get(0);
-          sesId = Integer.parseInt(cookie);
-          //System.out.println(sesId);
-          responseHeaders.set("Set-Cookie", Integer.toString(sesId));
-        }
-        else {
-          responseHeaders.set("Set-Cookie", Integer.toString(sessionId));
-          sesId = sessionId;
-          sessionId++;
-        }
-        
         if (keys.contains("query")){
           
           String query = query_map.get("query");  
@@ -253,7 +236,7 @@ class QueryHandler implements HttpHandler {
           {
             format = "text";
           }
-          queryResponse = this.getResponse(sesId, sds, format, query);
+          queryResponse = this.getResponse(sds, format, query);
         }
       }
     }
@@ -261,10 +244,23 @@ class QueryHandler implements HttpHandler {
     
     
       // Construct a simple response.
+      Headers responseHeaders = exchange.getResponseHeaders();
       if(format != null && format.equals("html"))
         responseHeaders.set("Content-Type", "text/html");
       else
         responseHeaders.set("Content-Type", "text/plain");
+
+      //for logging
+      if(requestHeaders.get("Cookie") != null) {
+        String cookie = requestHeaders.get("Cookie").get(0);
+        int sesId = Integer.parseInt(cookie);
+        //System.out.println(sesId);
+        responseHeaders.set("Set-Cookie", Integer.toString(sesId));
+      }
+      else {
+        responseHeaders.set("Set-Cookie", Integer.toString(sessionId));
+        sessionId++;
+      }
       
       exchange.sendResponseHeaders(200, 0);  // arbitrary number of bytes
       

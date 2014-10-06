@@ -58,7 +58,7 @@ class QueryHandler implements HttpHandler {
     return map;  
   } 
   
-  public String getResponse(int sesId, List<ScoredDocument> sds, String format, String query)
+  public String getResponse(List<ScoredDocument> sds, String format, String query)
   {
     if(format.equals("html"))
     {
@@ -109,7 +109,7 @@ class QueryHandler implements HttpHandler {
         while (itr.hasNext()){
           ScoredDocument sd = itr.next();
           int docid = sd.get_did();
-          LogHandler.log(Integer.toString(sesId), query, Integer.toString(docid), "render");
+          LogHandler.log(sessionid, query, docid, event);
           String title = sd.get_title();
           Double score = sd.get_score();
           Div outer_element = new Div();

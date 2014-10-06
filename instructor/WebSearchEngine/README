@@ -1,0 +1,6 @@
+To compile, extract the zip and in the directory WebSearchEngine (present directory), do the compilation as follows:
+
+javac -cp lib/gagawa-1.0.1.jar src/edu/nyu/cs/cs2580/*.java
+
+To run the search engine, use the following:
+java -cp ./lib/gagawa-1.0.1.jar:.:src edu.nyu.cs.cs2580.SearchEngine 25809 ./data/corpus.tsv
