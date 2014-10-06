@@ -43,11 +43,12 @@ public class LogHandler implements HttpHandler {
 	private static void log(String uriQuery) {
     System.out.println(uriQuery);
     Map<String,String> query_map = getQueryMap(uriQuery);
-    String sessionid = query_map.get("sessionid");
-    String query = query_map.get("query");
-    String docid = query_map.get("docid");
-    String event = "click";
-    log(sessionid,query,docid,event);
+      Set<String> keys = query_map.keySet();
+      String sessionid = query_map.get("sessionid");
+      String query = query_map.get("query");
+      String docid = query_map.get("docid");
+      String event = "click";
+      log(sessionid,query,docid,event);
 	}
 	
 	private static void log(String sessionid,String query, String docid,String event) {

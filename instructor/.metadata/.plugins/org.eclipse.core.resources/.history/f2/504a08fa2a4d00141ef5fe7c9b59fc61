@@ -43,22 +43,43 @@ public class LogHandler implements HttpHandler {
 	private static void log(String uriQuery) {
     System.out.println(uriQuery);
     Map<String,String> query_map = getQueryMap(uriQuery);
-    String sessionid = query_map.get("sessionid");
-    String query = query_map.get("query");
-    String docid = query_map.get("docid");
-    String event = "click";
-    log(sessionid,query,docid,event);
+      Set<String> keys = query_map.keySet();
+      StringBuilder sb = new StringBuilder();
+      sb.append(query_map.get("sessionid"));
+      sb.append('\t');
+      sb.append(query_map.get("query"));
+      sb.append('\t');
+      sb.append(query_map.get("docid"));
+      sb.append('\t');
+      sb.append("click");
+      sb.append('\t');
+      sb.append(System.currentTimeMillis());
+      sb.append('\n');
+      
+      System.out.println(sb.toString());
+      try {
+        logger.write(sb.toString());
+        logger.flush();
+        System.out.println("written");
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        System.out.println("Unable to log");
+      }
 	}
 	
 	private static void log(String sessionid,String query, String docid,String event) {
+    System.out.println(uriQuery);
+    Map<String,String> query_map = getQueryMap(uriQuery);
+      Set<String> keys = query_map.keySet();
       StringBuilder sb = new StringBuilder();
-      sb.append(sessionid);
+      sb.append(query_map.get("sessionid"));
       sb.append('\t');
-      sb.append(query);
+      sb.append(query_map.get("query"));
       sb.append('\t');
-      sb.append(docid);
+      sb.append(query_map.get("docid"));
       sb.append('\t');
-      sb.append(event);
+      sb.append("click");
       sb.append('\t');
       sb.append(System.currentTimeMillis());
       sb.append('\n');
