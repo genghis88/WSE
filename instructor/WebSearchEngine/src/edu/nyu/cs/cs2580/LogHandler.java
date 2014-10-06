@@ -22,7 +22,7 @@ public class LogHandler implements HttpHandler {
     try {
       File file = new File(logLocation);
       System.out.println("FILE "+file.getAbsolutePath());
-      logger = new BufferedWriter(new FileWriter(file));
+      logger = new BufferedWriter(new FileWriter(file,true));
     } catch (IOException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
