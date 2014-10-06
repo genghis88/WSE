@@ -40,10 +40,10 @@ public class LogHandler implements HttpHandler {
 	    return map;  
 	}
 	
-	private static void log(int sesId,String uriQuery) {
+	private static void log(String uriQuery) {
     System.out.println(uriQuery);
     Map<String,String> query_map = getQueryMap(uriQuery);
-    String sessionid = Integer.toString(sesId);
+    String sessionid = query_map.get("sessionid");
     String query = query_map.get("query");
     String docid = query_map.get("docid");
     String event = "click";
@@ -93,11 +93,12 @@ public class LogHandler implements HttpHandler {
 	    if(requestHeaders.get("Cookie") != null) {
         String cookie = requestHeaders.get("Cookie").get(0);
         int sesId = Integer.parseInt(cookie);
-        String uriQuery = exchange.getRequestURI().getQuery();
-        log(sesId,uriQuery);
       }
       else {
         //something wrong!!
       }
+	    
+	    String uriQuery = exchange.getRequestURI().getQuery();
+	    log(uriQuery);
 	}
 }

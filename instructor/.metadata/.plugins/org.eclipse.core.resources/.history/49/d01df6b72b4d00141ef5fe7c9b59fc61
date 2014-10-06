@@ -43,7 +43,7 @@ public class LogHandler implements HttpHandler {
 	private static void log(int sesId,String uriQuery) {
     System.out.println(uriQuery);
     Map<String,String> query_map = getQueryMap(uriQuery);
-    String sessionid = Integer.toString(sesId);
+    String sessionid = query_map.get("sessionid");
     String query = query_map.get("query");
     String docid = query_map.get("docid");
     String event = "click";

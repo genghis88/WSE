@@ -1,7 +1,6 @@
 function init()
 		{
                         var ca = document.cookie.split(';');
-                        console.log(ca[0]);
 			var elems = document.getElementsByClassName('outerelement');
 			var query = document.getElementById('search-list-div').getAttribute("queryattribute");
 			console.log(query);

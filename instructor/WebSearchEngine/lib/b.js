@@ -12,7 +12,8 @@ function init()
 					
 					var sessionId = ca[0];
 					var url = "/log/abc";
-					var params = "?docid=" + me.getAttribute('docid') + "&sessionid=" + sessionId + "&query=" + query;
+					//var params = "?docid=" + me.getAttribute('docid') + "&sessionid=" + sessionId + "&query=" + query;
+                                        var params = "?docid=" + me.getAttribute('docid') + "&query=" + query;
 					
 					var http;
 					if (window.XMLHttpRequest)
