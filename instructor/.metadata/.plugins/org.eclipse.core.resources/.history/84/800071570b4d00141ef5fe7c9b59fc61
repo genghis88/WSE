@@ -112,7 +112,7 @@ class Evaluator {
     return gainCounts;
   }
   
-  private static void printMetrics(double RR,ArrayList<Double> rr,String q,List<Integer> docIdList) {
+  private static void printMetrics(double RR,ArrayList<Double> rr,String q) {
     List<Integer> l = new LinkedList<Integer>(); 
     l.add(1);
     l.add(5);
@@ -241,7 +241,7 @@ class Evaluator {
       //ideal_dcg +=  
       if(l.contains(i+1)) {
         ideal_dcg_values.add(ideal_dcg);
-        //System.out.println("idcg "+ideal_dcg);
+        System.out.println("idcg "+ideal_dcg);
       }
       ct--;
     }
@@ -251,17 +251,10 @@ class Evaluator {
     int counter = 0;
     HashMap<Integer,Double> rel_judge_for_query = relevance_for_ndcg.get(q);
     for(int i=0;i<10;i++) {
-      int did = docIdList.get(i);
-      double gain = 0;
-      if(rel_judge_for_query.containsKey(did)) {
-        gain = rel_judge_for_query.get(did);
-      }
-      else {
-        gain = 0.0;
-      }
+      double gain = rel_judge_for_query.get(i);
       dcg += gain/(Math.log(i+2)/Math.log(2));
       if(l.contains(i+1)) {
-        //System.out.println("dcg "+dcg);
+        System.out.println("dcg "+dcg);
         ndcg_values.add(dcg/ideal_dcg_values.get(counter));
         counter++;
       }
@@ -290,19 +283,18 @@ class Evaluator {
       double N = 0.0;
       int i = 0;
       String q = null;
-      List<Integer> docIdList = new LinkedList<Integer>();
+      List<Integer> docIdList = LinkedList<Integer>();
       while ((line = reader.readLine()) != null){
         Scanner s = new Scanner(line).useDelimiter("\t");
         String query = s.next();
         if(!query.equals(q) && q != null) {
-          printMetrics(RR,rr,q,docIdList);
+          printMetrics(RR,rr,q);
           rr = new ArrayList<Double>();
-          docIdList = new LinkedList<Integer>();
           RR = 0.0;
         }
         q = query;
         int did = Integer.parseInt(s.next());
-        docIdList.add(did);
+        
       	String title = s.next();
       	double rel = Double.parseDouble(s.next());
       	if (relevance_judgments.containsKey(query) == false){
@@ -315,7 +307,7 @@ class Evaluator {
       	rr.add(RR);
       	++N;
       }
-      printMetrics(RR, rr, q,docIdList);
+      printMetrics(RR, rr, q);
     } catch (Exception e){
       System.err.println("Error:" + e.getMessage());
     }

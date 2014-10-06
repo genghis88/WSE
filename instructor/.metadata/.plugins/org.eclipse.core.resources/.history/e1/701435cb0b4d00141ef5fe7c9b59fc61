@@ -241,7 +241,7 @@ class Evaluator {
       //ideal_dcg +=  
       if(l.contains(i+1)) {
         ideal_dcg_values.add(ideal_dcg);
-        //System.out.println("idcg "+ideal_dcg);
+        System.out.println("idcg "+ideal_dcg);
       }
       ct--;
     }
@@ -261,7 +261,7 @@ class Evaluator {
       }
       dcg += gain/(Math.log(i+2)/Math.log(2));
       if(l.contains(i+1)) {
-        //System.out.println("dcg "+dcg);
+        System.out.println("dcg "+dcg);
         ndcg_values.add(dcg/ideal_dcg_values.get(counter));
         counter++;
       }
@@ -315,7 +315,7 @@ class Evaluator {
       	rr.add(RR);
       	++N;
       }
-      printMetrics(RR, rr, q,docIdList);
+      printMetrics(RR, rr, q);
     } catch (Exception e){
       System.err.println("Error:" + e.getMessage());
     }
