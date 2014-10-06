@@ -1,5 +1,0 @@
-package edu.nyu.cs.cs2580;
-
-public class QLRanker extends Ranker {
-  public QLRanker() {}
-}

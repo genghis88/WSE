@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="java.util.Vector"/>
+<fullyQualifiedTypeName name="edu.nyu.cs.cs2580.Phrase"/>
+<fullyQualifiedTypeName name="edu.nyu.cs.cs2580.Cosine"/>
+<fullyQualifiedTypeName name="edu.nyu.cs.cs2580.Numviews"/>
+<fullyQualifiedTypeName name="edu.nyu.cs.cs2580.QLRanker"/>
+<fullyQualifiedTypeName name="edu.nyu.cs.cs2580.LinearRanker"/>
 </qualifiedTypeNameHistroy>

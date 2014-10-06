@@ -15,7 +15,9 @@ import java.util.Scanner;
 
 import sun.reflect.generics.visitor.Reifier;
 
-class Evaluator { 
+class Evaluator {
+  
+  private static HashMap<String,HashMap<Integer,Double>> relevance_for_ndcg = new HashMap<String,HashMap<Integer,Double>>();  
 
  public static void main(String[] args) throws IOException {
     HashMap < String , HashMap < Integer , Double > > relevance_judgments =
@@ -37,6 +39,8 @@ class Evaluator {
       BufferedReader reader = new BufferedReader(new FileReader(p));
       try {
         String line = null;
+        int counter = 0;
+        double relevance = 0.0;
         while ((line = reader.readLine()) != null){
           // parse the query,did,relevance line
           Scanner s = new Scanner(line).useDelimiter("\t");
@@ -50,12 +54,36 @@ class Evaluator {
             (grade.equals("Good"))){
             rel = 1.0;
           }
+          if ((grade.equals("Perfect"))) {
+            relevance = 10.0;
+          }
+          else if ((grade.equals("Excellent"))) {
+            relevance = 7.0;
+          }
+          else if ((grade.equals("Good"))) {
+            relevance = 5.0;
+          }
+          else if ((grade.equals("Fair"))) {
+            relevance = 1.0;
+          }
+          else if ((grade.equals("Bad"))) {
+            relevance = 0.0;
+          }
           if (relevance_judgments.containsKey(query) == false){
             HashMap < Integer , Double > qr = new HashMap < Integer , Double >();
             relevance_judgments.put(query,qr);
           }
+          if (relevance_for_ndcg.containsKey(query) == false){
+            HashMap < Integer , Double > gainMap = new HashMap < Integer , Double >();
+            relevance_for_ndcg.put(query,gainMap);
+            counter = 0;
+          }
           HashMap < Integer , Double > qr = relevance_judgments.get(query);
           qr.put(did,rel);
+          
+          HashMap < Integer , Double > gainMap = relevance_for_ndcg.get(query);
+          gainMap.put(counter,relevance);
+          counter++;
         }
       } finally {
         reader.close();
@@ -64,20 +92,192 @@ class Evaluator {
       System.err.println("Oops " + ioe.getMessage());
     }
   }
+  
+  private static List<Integer> getCountWithGain(HashMap<Integer,Double> gainMap) {
+    List<Integer> gainCounts = new LinkedList<Integer>();
+    List<Double> gains = new LinkedList<Double>();
+    gains.add(10.0);
+    gains.add(7.0);
+    gains.add(5.0);
+    gains.add(1.0);
+    for(double gain:gains) {
+      int counter = 0;
+      for(double g:gainMap.values()) {
+        if(g == gain) {
+          counter++;
+        }
+      }
+      gainCounts.add(counter);
+    }
+    return gainCounts;
+  }
+  
+  private static void printMetrics(double RR,ArrayList<Double> rr,String q) {
+    List<Integer> l = new LinkedList<Integer>(); 
+    l.add(1);
+    l.add(5);
+    l.add(10);
+    StringBuilder sb = new StringBuilder();
+    sb.append(q);
+    sb.append('\t');
+    
+    List<Double> precision = new LinkedList<Double>();
+    List<Double> recall = new LinkedList<Double>();
+    List<Double> F = new LinkedList<Double>();
+    double alfa = 0.50;
+    for(int val : l)
+    {
+      Double x = rr.get(val-1);      
+      precision.add(x/val);
+      recall.add(x/RR);
+      F.add(1.0/(alfa*val/x + (1.0-alfa)*RR/x));
+    }
+    
+    for(double d : precision)
+    {
+      sb.append(d);
+      sb.append('\t');
+    }
+    
+    for(double d : recall)
+    {
+      sb.append(d);
+      sb.append('\t');
+    }
+    
+    for(double d : F)
+    {
+      sb.append(d);
+      sb.append('\t');
+    }
+    
+    //Average precision and reciprocal rank calculation
+    double ap = rr.get(0);
+    
+    List<Double> recallprecision = new LinkedList<Double>();
+    
+    double reciprocal_rank = 0.0;
+    if(rr.get(0) != 0) {
+      reciprocal_rank = 1.0;
+    }
+    
+    for(int z=0;z<11;z++) {
+      recallprecision.add(0.0);
+    }
+    
+    double recallOnePoint = 0;
+    
+    for(int j=1;j<rr.size();j++) {
+      double r = rr.get(j);
+      if(rr.get(j-1) == r) {
+        //we do nothing
+        //average precision need not be calculated at non relevant documents
+      }
+      else {
+        recallOnePoint = j;
+        ap += r/(j+1);
+        if(reciprocal_rank == 0) {
+          reciprocal_rank = 1.0 / (j+1);
+        }
+      }
+    }
+    
+    ap = (ap/RR);
+    
+    
+    boolean flag = true;
+    
+    int k = 0;
+    for(double j=0;j<=recallOnePoint;j+=(0.1 * (recallOnePoint))) {
+      int p = (int) Math.round(j);
+      if(!flag) {
+        double prec = (double) rr.get(p) * 1.0/(p+1);
+        //System.out.println("p "+p+" prec "+prec);
+        recallprecision.set(k, prec);
+      }
+      else {
+        flag = false;
+      }
+      k += 1;
+    }
+    
+    for(int j = 0; j < recallprecision.size(); j++) {
+      sb.append(recallprecision.get(j));
+      sb.append('\t');
+    }
+    
+    sb.append(ap);
+    sb.append('\t');
+    
+    //NDCG calculation
+    List<Double> ideal_dcg_values = new LinkedList<Double>();
+    List<Double> ndcg_values = new LinkedList<Double>();
+    
+    List<Integer> gainCounts = getCountWithGain(relevance_for_ndcg.get(q));
+    double ideal_dcg = 0.0;
+    int m = 0;
+    int ct = gainCounts.get(m);
+    for(int i=0;i<10;i++) {
+      while(ct == 0 && m < 3) {
+        m += 1;
+        ct = gainCounts.get(m);
+      }
+      if(m==0) {
+        ideal_dcg += (10/(Math.log(i+2)/Math.log(2)));
+      }
+      else if(m==1) {
+        ideal_dcg += (7/(Math.log(i+2)/Math.log(2)));
+      }
+      else if(m==2) {
+        ideal_dcg += (5/(Math.log(i+2)/Math.log(2)));
+      }
+      else if(m==3) {
+        ideal_dcg += (1/(Math.log(i+2)/Math.log(2)));
+      }
+      else {
+        //we don't do anything
+        break;
+      }
+      //ideal_dcg +=  
+      if(l.contains(i+1)) {
+        ideal_dcg_values.add(ideal_dcg);
+        System.out.println("idcg "+ideal_dcg);
+      }
+      ct--;
+    }
+    
+    //dcg calculation
+    double dcg = 0;
+    int counter = 0;
+    HashMap<Integer,Double> rel_judge_for_query = relevance_for_ndcg.get(q);
+    for(int i=0;i<10;i++) {
+      double gain = rel_judge_for_query.get(i);
+      dcg += gain/(Math.log(i+2)/Math.log(2));
+      if(l.contains(i+1)) {
+        System.out.println("dcg "+dcg);
+        ndcg_values.add(dcg/ideal_dcg_values.get(counter));
+        counter++;
+      }
+    }
+    
+    for(double ndcg_value:ndcg_values) {
+      sb.append(ndcg_value);
+      sb.append("\t");
+    }
+    
+    sb.append(reciprocal_rank);
+    sb.append("\n");
+    
+    System.out.println(sb.toString());
+  }
 
   public static void evaluateStdin(
     HashMap < String , HashMap < Integer , Double > > relevance_judgments){
     // only consider one query per call    
-	StringBuilder sb = new StringBuilder();
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-      List<Integer> l = new LinkedList<Integer>(); 
-      l.add(1);
-      l.add(5);
-      l.add(10);
-  
-      ArrayList<Double> rr = new ArrayList<Double>();
       
+      ArrayList<Double> rr = new ArrayList<Double>();
       String line = null;
       double RR = 0.0;
       double N = 0.0;
@@ -86,6 +286,11 @@ class Evaluator {
       while ((line = reader.readLine()) != null){
         Scanner s = new Scanner(line).useDelimiter("\t");
         String query = s.next();
+        if(!query.equals(q) && q != null) {
+          printMetrics(RR,rr,q);
+          rr = new ArrayList<Double>();
+          RR = 0.0;
+        }
         q = query;
         int did = Integer.parseInt(s.next());
       	String title = s.next();
@@ -96,92 +301,11 @@ class Evaluator {
       	HashMap < Integer , Double > qr = relevance_judgments.get(query);
       	if (qr.containsKey(did) != false){
       	  RR += qr.get(did);
-      	  rr.add(RR);
       	}
+      	rr.add(RR);
       	++N;
       }
-      sb.append(q);
-      sb.append('\t');
-      
-      List<Double> precision = new LinkedList<Double>();
-      List<Double> recall = new LinkedList<Double>();
-      List<Double> F = new LinkedList<Double>();
-      double alfa = 0.50;
-      for(int val : l)
-      {
-    	  Double x = rr.get(val-1);    	 
-    	  precision.add(x/val);
-    	  recall.add(x/RR);
-    	  F.add(1.0/(alfa*val/x + (1.0-alfa)*RR/x));
-      }
-      
-      for(double d : precision)
-      {
-    	  sb.append(d);
-    	  sb.append('\t');
-      }
-      
-      for(double d : recall)
-      {
-    	  sb.append(d);
-    	  sb.append('\t');
-      }
-      
-      for(double d : F)
-      {
-    	  sb.append(d);
-    	  sb.append('\t');
-      }
-      
-      //Average precision and reciprocal rank calculation
-      double ap = rr.get(0);
-      
-      List<Double> recallprecision = new LinkedList<Double>();
-      recallprecision.add(0.0);
-      
-      double reciprocal_rank = 0.0;
-      if(rr.get(0) != 0) {
-    	  reciprocal_rank = 1.0;
-      }
-      double counter=ap;
-      double recallpoint=0.1;
-      
-      for(int j=1;j<rr.size();j++) {
-    	  double r = rr.get(j);
-    	  if(rr.get(j-1) == r) {
-    		  //we do nothing
-    		  //average precision need not be calculated at non relevant documents
-    	  }
-    	  else {
-    		  if((int)RR*recallpoint == (int)counter)
-    		  {
-    			  recallpoint += 0.1;
-    			  recallprecision.add(r/(j+1));
-    		  }
-    		  counter++;
-    		  ap += r/(j+1);
-    		  if(reciprocal_rank != 0) {
-        		  reciprocal_rank = 1/(j+1);
-        	  }
-    	  }
-      }
-      
-      for(int j = 0; j <= 10 && j < recallprecision.size(); j++)
-      {
-    	  sb.append(recallprecision.get(i));
-    	  sb.append('\t');
-      }
-      ap = (ap/RR);
-      
-      sb.append(ap);
-      sb.append('\t');
-      
-      //NDCG calculation
-      //List<double> 
-      //for(int j=0;j<10;j++)
-      
-      
-      System.out.println(sb.toString());
+      printMetrics(RR, rr, q);
     } catch (Exception e){
       System.err.println("Error:" + e.getMessage());
     }

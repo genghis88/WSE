@@ -1,7 +1,0 @@
-package edu.nyu.cs.cs2580;
-
-public class QLRanker extends Ranker {
-  public QLRanker(String index_source) {
-    _index = new Index(index_source);
-  }
-}

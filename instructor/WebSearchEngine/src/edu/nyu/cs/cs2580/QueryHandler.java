@@ -1,5 +1,7 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -7,6 +9,7 @@ import com.hp.gagawa.java.elements.Body;
 import com.hp.gagawa.java.elements.Div;
 import com.hp.gagawa.java.elements.Head;
 import com.hp.gagawa.java.elements.Html;
+import com.hp.gagawa.java.elements.Script;
 import com.hp.gagawa.java.elements.Style;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -16,9 +19,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Vector;
+
+import javax.swing.text.html.HTML;
+
+
 
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
@@ -35,6 +43,7 @@ class QueryHandler implements HttpHandler {
     _rankermap.put("linear", new LinearRanker(ranker.get_index()));
   }
 
+  
   public static Map<String, String> getQueryMap(String query){  
     String[] params = query.split("&");  
     Map<String, String> map = new HashMap<String, String>();  
@@ -54,14 +63,41 @@ class QueryHandler implements HttpHandler {
       Body body = new Body();
         Head head = new Head();
         Style style = new Style("text/css");
-        style.appendText(".outerelement{  font-family:Sans-serif; font-size: 15px; width: 500px; background-color: #F8F8F8; border-bottom : 1px solid black; margin:0px; padding: 10px;}" +
-            ".outerelement:hover{background-color: #E8E8E8;}" +
-            ".docid{float: left; margin-right:10px;}" +
-            ".title{margin-left: 10px;font-weight: bold;}" +
-            ".scoretag{float: left;margin-right: 10px;}" +
-            ".scorevalue{margin-left:10px; font-weight: bold;}");
-        
+        Scanner sc = null;
+        try {
+      sc = new Scanner(new File("./lib/a.css"));
+      StringBuffer sb = new StringBuffer();
+      while(sc.hasNextLine())
+      {
+        sb.append(sc.nextLine());
+        sb.append('\n');
+      }
+      sc.close();
+      style.appendText(sb.toString());
+    
+        } catch (FileNotFoundException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }       
       head.appendChild(style);
+      Script script = new Script("text/javascript");
+      try {
+        sc = new Scanner(new File("./lib/b.js"));
+        StringBuffer sb = new StringBuffer();
+        while(sc.hasNextLine())
+        {
+          sb.append(sc.nextLine());
+          sb.append('\n');
+        }
+        sc.close();
+        script.appendText(sb.toString());
+      
+      } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+      }
+      
+      head.appendChild(script);
         Iterator < ScoredDocument > itr = sds.iterator();
         Div d = new Div();
         d.setId("search-list-div").setCSSClass("searchlist");
@@ -109,6 +145,7 @@ class QueryHandler implements HttpHandler {
         }
         
         body.appendChild(d);
+        body.setAttribute("onload", "init()");
         page.appendChild(head);
         page.appendChild(body);
       
