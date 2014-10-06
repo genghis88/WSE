@@ -1,0 +1,96 @@
+package edu.nyu.cs.cs2580;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+public class LogHandler implements HttpHandler {
+  
+  private static final String logLocation = "logs/log.txt";
+  
+  private static File file = new File(logLocation);
+  private static BufferedWriter logger = null;
+  
+  public LogHandler() {
+    try {
+      logger = new BufferedWriter(new FileWriter(file));
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
+
+	public static Map<String, String> getQueryMap(String query){  
+	    String[] params = query.split("&");  
+	    Map<String, String> map = new HashMap<String, String>();  
+	    for (String param : params){  
+	      String name = param.split("=")[0];  
+	      String value = param.split("=")[1];  
+	      map.put(name, value);  
+	    }
+	    return map;  
+	}
+	
+	private static void log(String uriQuery) {
+    System.out.println(uriQuery);
+    Map<String,String> query_map = getQueryMap(uriQuery);
+      Set<String> keys = query_map.keySet();
+      StringBuilder sb = new StringBuilder();
+      sb.append(query_map.get("sessionid"));
+      sb.append('\t');
+      sb.append(query_map.get("query"));
+      sb.append('\t');
+      sb.append(query_map.get("docid"));
+      sb.append('\t');
+      sb.append("click");
+      sb.append('\t');
+      sb.append(System.currentTimeMillis());
+      
+      System.out.println(sb.toString());
+      try {
+        logger.write(sb.toString());
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        System.out.println("Unable to log");
+      }
+	}
+	
+	@Override
+	public void handle(HttpExchange exchange) throws IOException {
+		// TODO Auto-generated method stub
+		String requestMethod = exchange.getRequestMethod();
+	    if (!requestMethod.equalsIgnoreCase("GET")){  // POST requests only.
+	      return;
+	    }
+	    
+	    Headers requestHeaders = exchange.getRequestHeaders();
+	    System.out.print("Incoming request: ");
+	    for (String key : requestHeaders.keySet()){
+	      System.out.print(key + ":" + requestHeaders.get(key) + "; ");
+	    }
+	    System.out.println(); 
+	    
+	    if(requestHeaders.get("Cookie") != null) {
+        String cookie = requestHeaders.get("Cookie").get(0);
+        int sesId = Integer.parseInt(cookie);
+        System.out.println(sesId);
+        responseHeaders.set("Set-Cookie", Integer.toString(sesId));
+      }
+      else {
+        responseHeaders.set("Set-Cookie", Integer.toString(sessionId));
+        sessionId++;
+      }
+	    
+	    String uriQuery = exchange.getRequestURI().getQuery();
+	    log(uriQuery);
+	}
+}

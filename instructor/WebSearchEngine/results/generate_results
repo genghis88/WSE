@@ -1,0 +1,5 @@
+while read line
+do
+  line=`echo $line | sed -r 's/ /%20/g'`
+  curl "http://localhost:25809/search?query=$line&ranker=linear&format=text" >> hw1.2-linear.tsv
+done < $1

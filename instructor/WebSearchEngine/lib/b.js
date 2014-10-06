@@ -1,5 +1,6 @@
 function init()
 		{
+                        var ca = document.cookie.split(';');
 			var elems = document.getElementsByClassName('outerelement');
 			var query = document.getElementById('search-list-div').getAttribute("queryattribute");
 			console.log(query);
@@ -9,7 +10,7 @@ function init()
 				elems[elem].onclick = function(){
 					var me = this;
 					
-					var sessionId = "abc";
+					var sessionId = ca[0];
 					var url = "/log/abc";
 					var params = "?docid=" + me.getAttribute('docid') + "&sessionid=" + sessionId + "&query=" + query;
 					

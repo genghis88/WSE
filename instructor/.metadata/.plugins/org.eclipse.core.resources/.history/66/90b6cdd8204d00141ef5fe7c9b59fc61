@@ -1,0 +1,261 @@
+package edu.nyu.cs.cs2580;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import com.hp.gagawa.java.elements.Body;
+import com.hp.gagawa.java.elements.Div;
+import com.hp.gagawa.java.elements.Head;
+import com.hp.gagawa.java.elements.Html;
+import com.hp.gagawa.java.elements.Script;
+import com.hp.gagawa.java.elements.Style;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.swing.text.html.HTML;
+
+
+
+class QueryHandler implements HttpHandler {
+  private static String plainResponse =
+      "Request received, but I am not smart enough to echo yet!\n";
+
+  private Ranker _ranker;
+  private HashMap<String, Ranker> _rankermap;
+  public QueryHandler(Ranker ranker){
+    _ranker = ranker;
+    _rankermap = new HashMap<String, Ranker>();
+    _rankermap.put("cosine", new Cosine(ranker.get_index()));
+    _rankermap.put("QL", new QLRanker(ranker.get_index()));
+    _rankermap.put("phrase", new Phrase(ranker.get_index()));
+    _rankermap.put("numviews", new Numviews(ranker.get_index()));
+    _rankermap.put("linear", new LinearRanker(ranker.get_index()));
+  }
+
+  
+  public static Map<String, String> getQueryMap(String query){  
+    String[] params = query.split("&");  
+    Map<String, String> map = new HashMap<String, String>();  
+    for (String param : params){  
+      String name = param.split("=")[0];  
+      String value = param.split("=")[1];  
+      map.put(name, value);  
+    }
+    return map;  
+  } 
+  
+  public String getResponse(List<ScoredDocument> sds, String format, String query)
+  {
+    if(format.equals("html"))
+    {
+      Html page = new Html();
+      Body body = new Body();
+        Head head = new Head();
+        Style style = new Style("text/css");
+        Scanner sc = null;
+        try {
+      sc = new Scanner(new File("./lib/a.css"));
+      StringBuffer sb = new StringBuffer();
+      while(sc.hasNextLine())
+      {
+        sb.append(sc.nextLine());
+        sb.append('\n');
+      }
+      sc.close();
+      style.appendText(sb.toString());
+    
+        } catch (FileNotFoundException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }       
+      head.appendChild(style);
+      Script script = new Script("text/javascript");
+      try {
+        sc = new Scanner(new File("./lib/b.js"));
+        StringBuffer sb = new StringBuffer();
+        while(sc.hasNextLine())
+        {
+          sb.append(sc.nextLine());
+          sb.append('\n');
+        }
+        sc.close();
+        script.appendText(sb.toString());
+      
+      } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+      }
+      
+      head.appendChild(script);
+        Iterator < ScoredDocument > itr = sds.iterator();
+        Div d = new Div();
+        d.setId("search-list-div").setCSSClass("searchlist");
+        d.setAttribute("queryattribute", query);
+        
+        while (itr.hasNext()){
+          ScoredDocument sd = itr.next();
+          int docid = sd.get_did();
+          String title = sd.get_title();
+          Double score = sd.get_score();
+          Div outer_element = new Div();
+          Div line1_element = new Div();
+          Div docid_element = new Div();
+          Div title_element = new Div();
+          Div line2_element = new Div();
+          Div scoretag_element = new Div();
+          Div score_element = new Div();
+          
+          line1_element.setCSSClass("lineone");
+          docid_element.setCSSClass("docid");
+          docid_element.appendText(docid+"");
+          
+          title_element.setCSSClass("title");
+          title_element.appendText(title);
+          
+          line1_element.appendChild(docid_element, title_element);
+          
+          line2_element.setCSSClass("linetwo");
+          scoretag_element.setCSSClass("scoretag");
+          scoretag_element.appendText("Score:");
+          
+          score_element.setCSSClass("scorevalue");
+          score_element.setAttribute("value", score.toString());
+          score_element.appendText(String.format("%.3f", score));
+          
+          line2_element.appendChild(scoretag_element, score_element);
+          
+          outer_element.setId(docid+"");
+          outer_element.setAttribute("docid", docid+"");
+          outer_element.setCSSClass("outerelement");
+          outer_element.appendChild(line1_element, line2_element);
+          
+          d.appendChild(outer_element);
+          
+        }
+        
+        body.appendChild(d);
+        body.setAttribute("onload", "init()");
+        page.appendChild(head);
+        page.appendChild(body);
+      
+        return page.write();
+    }
+    else
+    {
+      String queryResponse = "";  
+      Iterator < ScoredDocument > itr = sds.iterator();
+          while (itr.hasNext()){
+            ScoredDocument sd = itr.next();
+            if (queryResponse.length() > 0){
+              queryResponse = queryResponse + "\n";
+            }
+            
+            queryResponse = queryResponse + query + "\t" + sd.asString();
+          }
+          if (queryResponse.length() > 0){
+            queryResponse = queryResponse + "\n";
+          }          
+          return queryResponse;
+    }
+    
+  }
+
+  
+  
+  public void handle(HttpExchange exchange) throws IOException {
+    String requestMethod = exchange.getRequestMethod();
+    if (!requestMethod.equalsIgnoreCase("GET")){  // GET requests only.
+      return;
+    }
+
+    // Print the user request header.
+    Headers requestHeaders = exchange.getRequestHeaders();
+    System.out.print("Incoming request: ");
+    for (String key : requestHeaders.keySet()){
+      System.out.print(key + ":" + requestHeaders.get(key) + "; ");
+    }
+    System.out.println();
+    String queryResponse = "";  
+    String uriQuery = exchange.getRequestURI().getQuery();
+    String uriPath = exchange.getRequestURI().getPath();
+    Vector < ScoredDocument > sds = null;
+    String format = null;
+    if ((uriPath != null) && (uriQuery != null)){
+      if (uriPath.equals("/search")){
+        Map<String,String> query_map = getQueryMap(uriQuery);
+        Set<String> keys = query_map.keySet();
+        if (keys.contains("query")){
+          
+          String query = query_map.get("query");  
+          
+          if (keys.contains("ranker")){
+            String ranker_type = query_map.get("ranker");
+            // @CS2580: Invoke different ranking functions inside your
+            // implementation of the Ranker class.
+            Ranker r = null;
+            if(_rankermap.containsKey(ranker_type))
+            {
+              r = _rankermap.get(ranker_type);
+              if(r == null)
+                r = _ranker;
+            }
+            else
+            {
+              r = _ranker;
+            }            
+            sds = r.runquery(query);
+            
+            
+          } else {
+            // @CS2580: The following is instructor's simple ranker that does not
+            // use the Ranker class.
+            
+            sds = _ranker.runquery(query);
+          }
+            
+          Collections.sort(sds, new ScoredDocumentComparator());
+          if(query_map.containsKey("format"))
+          {
+            format = query_map.get("format");
+          }
+          else
+          {
+            format = "text";
+          }
+          queryResponse = this.getResponse(sds, format, query);
+        }
+      }
+    }
+    
+    
+    
+      // Construct a simple response.
+      Headers responseHeaders = exchange.getResponseHeaders();
+      if(format != null && format.equals("html"))
+        responseHeaders.set("Content-Type", "text/html");
+      else
+        responseHeaders.set("Content-Type", "text/plain");
+      
+      //for logging
+      requestHeaders.get("SessionId");
+      
+      exchange.sendResponseHeaders(200, 0);  // arbitrary number of bytes
+      
+      OutputStream responseBody = exchange.getResponseBody();
+      responseBody.write(queryResponse.getBytes());
+      
+      responseBody.close();
+  }
+}

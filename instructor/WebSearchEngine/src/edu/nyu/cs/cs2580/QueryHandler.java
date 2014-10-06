@@ -31,6 +31,8 @@ import javax.swing.text.html.HTML;
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
       "Request received, but I am not smart enough to echo yet!\n";
+  
+  private static int sessionId = 0;
 
   private Ranker _ranker;
   private HashMap<String, Ranker> _rankermap;
@@ -40,6 +42,7 @@ class QueryHandler implements HttpHandler {
     _rankermap.put("cosine", new Cosine(ranker.get_index()));
     _rankermap.put("QL", new QLRanker(ranker.get_index()));
     _rankermap.put("phrase", new Phrase(ranker.get_index()));
+    _rankermap.put("numviews", new Numviews(ranker.get_index()));
     _rankermap.put("linear", new LinearRanker(ranker.get_index()));
   }
 
@@ -246,6 +249,18 @@ class QueryHandler implements HttpHandler {
         responseHeaders.set("Content-Type", "text/html");
       else
         responseHeaders.set("Content-Type", "text/plain");
+
+      //for logging
+      if(requestHeaders.get("Cookie") != null) {
+        String cookie = requestHeaders.get("Cookie").get(0);
+        int sesId = Integer.parseInt(cookie);
+        //System.out.println(sesId);
+        responseHeaders.set("Set-Cookie", Integer.toString(sesId));
+      }
+      else {
+        responseHeaders.set("Set-Cookie", Integer.toString(sessionId));
+        sessionId++;
+      }
       
       exchange.sendResponseHeaders(200, 0);  // arbitrary number of bytes
       

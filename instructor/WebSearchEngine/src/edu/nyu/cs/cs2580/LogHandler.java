@@ -1,5 +1,8 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +13,21 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 public class LogHandler implements HttpHandler {
+  
+  private static final String logLocation = "logs/log.txt";
+  
+  private static BufferedWriter logger = null;
+  
+  public LogHandler() {
+    try {
+      File file = new File(logLocation);
+      System.out.println("FILE "+file.getAbsolutePath());
+      logger = new BufferedWriter(new FileWriter(file));
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
 
 	public static Map<String, String> getQueryMap(String query){  
 	    String[] params = query.split("&");  
@@ -20,6 +38,34 @@ public class LogHandler implements HttpHandler {
 	      map.put(name, value);  
 	    }
 	    return map;  
+	}
+	
+	private static void log(String uriQuery) {
+    System.out.println(uriQuery);
+    Map<String,String> query_map = getQueryMap(uriQuery);
+      Set<String> keys = query_map.keySet();
+      StringBuilder sb = new StringBuilder();
+      sb.append(query_map.get("sessionid"));
+      sb.append('\t');
+      sb.append(query_map.get("query"));
+      sb.append('\t');
+      sb.append(query_map.get("docid"));
+      sb.append('\t');
+      sb.append("click");
+      sb.append('\t');
+      sb.append(System.currentTimeMillis());
+      sb.append('\n');
+      
+      System.out.println(sb.toString());
+      try {
+        logger.write(sb.toString());
+        logger.flush();
+        System.out.println("written");
+      } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        System.out.println("Unable to log");
+      }
 	}
 	
 	@Override
@@ -37,22 +83,15 @@ public class LogHandler implements HttpHandler {
 	    }
 	    System.out.println(); 
 	    
+	    if(requestHeaders.get("Cookie") != null) {
+        String cookie = requestHeaders.get("Cookie").get(0);
+        int sesId = Integer.parseInt(cookie);
+      }
+      else {
+        //something wrong!!
+      }
+	    
 	    String uriQuery = exchange.getRequestURI().getQuery();
-	    System.out.println(uriQuery);
-	    Map<String,String> query_map = getQueryMap(uriQuery);
-        Set<String> keys = query_map.keySet();
-        StringBuilder sb = new StringBuilder();
-        sb.append(query_map.get("sessionid"));
-        sb.append('\t');
-        sb.append(query_map.get("query"));
-        sb.append('\t');
-        sb.append(query_map.get("docid"));
-        sb.append('\t');
-        sb.append("click");
-        sb.append('\t');
-        sb.append(System.currentTimeMillis());
-        
-        System.out.println(sb.toString());
+	    log(uriQuery);
 	}
-
 }
